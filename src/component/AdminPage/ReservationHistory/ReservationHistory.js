@@ -6,8 +6,11 @@ import { setReservation } from '../../../redux/actions/libraryActions';
 export default function ReservationHistory() {
     const reservations = useSelector(state => state.allReservations.reservations);
     const dispatch = useDispatch();
-  
-// ========================== DISPLAY THE DATA FROM THE DATABASE CODES START HERE ==========================
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // ========================== DISPLAY THE DATA FROM THE DATABASE CODES START HERE ==========================
     const displayReservation = () => {
         http.get('reservations')
             .then(result => {
@@ -18,16 +21,15 @@ export default function ReservationHistory() {
                 console.log('API Error:', error.message);
             });
     };
-    
+
     useEffect(() => {
         displayReservation();
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new window.bootstrap.Tooltip(tooltipTriggerEl));
     }, []);
-// ========================== DISPLAY THE DATA FROM THE DATABASE CODES END HERE ==========================
+    // ========================== DISPLAY THE DATA FROM THE DATABASE CODES END HERE ==========================
 
-// ========================== MODAL CODES START HERE ==========================
-    
+    // ========================== MODAL CODES START HERE ==========================
     const [modalData, setModalData] = useState(null);
     const [completedChecked, setCompletedChecked] = useState(false);
     const [declinedChecked, setDeclinedChecked] = useState(false);
@@ -38,9 +40,9 @@ export default function ReservationHistory() {
         const modal = new window.bootstrap.Modal(document.getElementById('viewModal'));
         modal.show();
     };
-// ========================== MODAL CODES END HERE ==========================
+    // ========================== MODAL CODES END HERE ==========================
 
-// ========================== FILTER AND SEARCH THE DATA FROM THE DATABASE CODES START HERE ==========================
+    // ========================== FILTER AND SEARCH THE DATA FROM THE DATABASE CODES START HERE ==========================
     const filterReservations = () => {
         return reservations.filter(reservation => 
             ((completedChecked && reservation.Status === 'Completed') || 
@@ -65,7 +67,35 @@ export default function ReservationHistory() {
     const handleSearchClick = () => {
         filterReservations();
     };
-// ========================== FILTER AND SEARCH THE DATA FROM THE DATABASE CODES END HERE ==========================
+    // ========================== FILTER AND SEARCH THE DATA FROM THE DATABASE CODES END HERE ==========================
+
+    // ========================== PAGINATION CODES START HERE ==========================
+    const paginate = (items, pageNumber, pageSize) => {
+        const start = (pageNumber - 1) * pageSize;
+        return items.slice(start, start + pageSize);
+    };
+
+    const filteredReservations = filterReservations();
+    const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
+
+    const goToPage = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    const prevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const nextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const displayedReservations = paginate(filteredReservations, currentPage, itemsPerPage);
+    // ========================== PAGINATION CODES END HERE ==========================
 
     return (
         <>
@@ -131,7 +161,7 @@ export default function ReservationHistory() {
                     </thead>
                     <tbody>
                         {Array.isArray(reservations) && reservations.length > 0 ? (
-                            filterReservations().map(showReservation => (
+                            displayedReservations.map(showReservation => (
                                 <tr key={showReservation.ReservationId}>
                                     <td>{showReservation.Fullname}</td>
                                     <td>{showReservation.Email} <br/>{showReservation.MobileNo}</td>
@@ -161,6 +191,22 @@ export default function ReservationHistory() {
                     </tbody>
                 </table>
 
+                <nav aria-label="Page navigation example">
+                    <ul className="pagination justify-content-end">
+                        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                            <button className="page-link" onClick={prevPage}>Previous</button>
+                        </li>
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <li key={index} className={`page-item ${index + 1 === currentPage ? 'active' : ''}`}>
+                                <button className="page-link" onClick={() => goToPage(index + 1)}>{index + 1}</button>
+                            </li>
+                        ))}
+                        <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                            <button className="page-link" onClick={nextPage}>Next</button>
+                        </li>
+                    </ul>
+                </nav>
+                
                 <div className="modal fade" id="viewModal" tabIndex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
                     <div className="modal-dialog">
                         <div className="modal-content">

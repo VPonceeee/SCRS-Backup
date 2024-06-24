@@ -3,6 +3,7 @@ import Home from '../Home/Home'
 //import Navbar from '../../Navbar/Navbar'
 import Facilities from '../Facilities/Facilities'
 import Services from '../Services/Services'
+import UserCalendar from '../UserCalendar/UserCalendar'
 
 export default function Homepage() {
   return (
@@ -12,6 +13,7 @@ export default function Homepage() {
 
           <div id='HomeSection'>
               <Home/>
+              <UserCalendar/>
           </div>
 
           <div id='ServicesSection'>
